@@ -6,11 +6,11 @@
 
 # Table of Contents
 
-1. [Alv-tools Description](#alv-tools---pentesting-toolkit)
-2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Demo](#demo)
+- [Alv-tools Description](#alv-tools---pentesting-toolkit)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Demo](#demo)
    - [Option -h, --help](#-h---help)
    - [Option -p, --portscan](#-p---portscan)
    - [Option -s, --serviceenum](#-s---serviceenum)
