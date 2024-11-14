@@ -4,8 +4,6 @@
 
 ---
 
-# Table of Contents
-
 - [Alv-tools Description](#alv-tools---pentesting-toolkit)
 - [Features](#features)
 - [Installation](#installation)
