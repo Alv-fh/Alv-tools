@@ -1,4 +1,4 @@
-# Alv-tools - Pentesting Toolkit
+# <picture><img src = "https://github.com/7oSkaaa/7oSkaaa/blob/main/Images/about_me.gif?raw=true" width = 30px></picture> Alv-tools - Pentesting Toolkit
 
 **Alv-tools** es una herramienta de pentesting creada en Bash, diseñada para realizar tareas de escaneo y enumeración en redes e IPs específicas. Su objetivo es proporcionar información sobre el objetivo (Target) para facilitar la fase de reconocimiento.
 
@@ -14,7 +14,7 @@
    - [Option -a, --arp-scan](#-a---arp-scan)
    - [Option -o, --osdetect](#-o---osdetect)
    - [Option -f, --fullscan](#-f---fullscan)
-
+- [Goal for EJPTv2 > $249](#goal-for-ejptv2--249)
 ---
 
 ## Features
@@ -67,4 +67,10 @@ sudo bash alv-tools.sh [OPTION] [TARGET]
 ### -f, --fullscan
 
 ![fullscan](https://github.com/user-attachments/assets/97d8acf1-524c-43d3-8e52-7af393450edd)
+
+### Goal for EJPTv2 > $249
+
+<a href='https://ko-fi.com/W7W313M7FS' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+
 
