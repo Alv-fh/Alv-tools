@@ -14,6 +14,9 @@
    - [Option -h, --help](#-h---help)
    - [Option -p, --portscan](#-p---portscan)
    - [Option -s, --serviceenum](#-s---serviceenum)
+   - [Option -a, --arp-scan](#-a---arp-scan)
+   - [Option -o, --osdetect](#-o---osdetect)
+   - [Option -f, --fullscan](#-f---fullscan)
 
 ---
 
@@ -56,7 +59,15 @@ sudo bash alv-tools.sh [OPTION] [TARGET]
 
 ![services](https://github.com/user-attachments/assets/6ff91b9e-d976-4227-a505-da37606925bc)
 
----
+### -a, --arp-scan
 
-Prueba esta estructura. Los enlaces en la tabla de contenidos deberían redirigir correctamente a cada sección específica.
+![arp-scan](https://github.com/user-attachments/assets/02c6dfdf-9037-45af-acb2-85eb3c7dbaee)
+
+### -o, --osdetect
+
+![os](https://github.com/user-attachments/assets/e85f41b5-a27e-4ed7-9172-a7a5ed3c8ba4)
+
+### -f, --fullscan
+
+![fullscan](https://github.com/user-attachments/assets/97d8acf1-524c-43d3-8e52-7af393450edd)
 
