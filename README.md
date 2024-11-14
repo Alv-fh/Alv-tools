@@ -15,10 +15,14 @@ Alv-tools permite realizar varias tareas comunes en el pentesting:
 
 ## Instalación
 
-`git clone`
-
+```bash
+git clone https://github.com/Alv-fh/Alv-tools.git
+```
 
 ## Uso
 
 ```bash
 sudo bash alv-tool.sh [OPCIÓN] [OBJETIVO]
+```
+
+## Demo
