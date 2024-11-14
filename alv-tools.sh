@@ -217,6 +217,8 @@ case "$1" in
                                 echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> VirtualBox <-${RESET}"
                             elif [[ $mac == 00:0C* ]]; then
                                 echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> VMware <-${RESET}"
+                            elif [[ $mac == 52:54* ]]; then
+                                echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> Qemu <-${RESET}"
                             else
                                 echo -e "${CYAN}Device -> IP: $ip${RESET}"
                             fi
