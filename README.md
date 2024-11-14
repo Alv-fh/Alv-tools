@@ -1,6 +1,6 @@
 # Alv-tools - Pentesting Toolkit
 
-**Alv-tools** es una herramienta de pentesting creada en Bash, diseñada para realizar tareas de escaneo y enumeración en redes e IPs específicas. Su objetivo es proporcionar una serie de opciones prácticas para los pentesters en sus auditorías de seguridad.
+**Alv-tools** es una herramienta de pentesting creada en Bash, diseñada para realizar tareas de escaneo y enumeración en redes e IPs específicas. Su objetivo es proporcionar información sobre el objetivo (Target) para facilitar la fase de reconocimiento.
 
 ## Características
 
