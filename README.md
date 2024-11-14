@@ -24,7 +24,9 @@ sudo bash alv-tools -h
 ## Uso
 
 ```bash
-sudo bash alv-tool.sh [OPCIÓN] [OBJETIVO]
+sudo bash alv-tools.sh [OPCIÓN] [OBJETIVO]
 ```
 
 ## Demo
+
+![help](https://github.com/user-attachments/assets/63c6d66b-8f94-45fc-9fcf-f69cc3046ae0)
