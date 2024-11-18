@@ -184,22 +184,92 @@ case "$1" in
         fi
         ;;
     # Arp-Scan
-    -a|--arp-scan)
-        interface=$2
-        if [[ -z "$interface" ]]; then
-            echo -e "${RED}Please specify a network interface.${RESET}"
+   -a|--arp-scan)
+    interface=$2
+    if [[ -z "$interface" ]]; then
+        echo -e "${RED}No interface specified. Please provide a network interface.${RESET}"
+    else
+        if ! ip link show "$interface" &> /dev/null; then
+            echo -e "${RED}The interface '$interface' is not valid. Please provide a valid network interface.${RESET}"
         else
             if ! command -v arp-scan &> /dev/null; then
-                echo -e "${RED}Installing arp-scan...${RESET}"
-                sudo apt-get update > /dev/null 2>&1
+                echo -e "${RED}arp-scan is not installed. Starting installation...${RESET}"
+                sudo apt-get update > /dev/null 2>&1  
                 sudo apt-get install -y arp-scan > /dev/null 2>&1 &
-                for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing arp-scan... ${i}%\r${RESET}"; done
-                echo -e "${GREEN}\nARP-scan installation complete.${RESET}"
+                
+                for i in {1..100}; do
+                    sleep 0.05
+                    echo -ne "${GREEN}Installing arp-scan... ${i}%\r${RESET}"
+                done
+                echo -e "\n${GREEN}arp-scan installation complete.${RESET}"
             fi
-            sudo arp-scan --interface="$interface" --localnet
+            echo -e "${GREEN}Performing ARP scan on interface $interface...${RESET}" 
+            scan_result=$(sudo arp-scan --interface="$interface" --localnet 2>&1)
+            if echo "$scan_result" | grep -q "Could not obtain IP address"; then
+                echo -e "${RED}No devices found on this interface.${RESET}"
+            elif [[ -z "$scan_result" ]]; then
+                echo -e "${RED}No devices found on this interface.${RESET}"
+            else
+                echo "$scan_result" | while read -r line; do
+                    ip=$(echo "$line" | awk '{print $1}')
+                    mac=$(echo "$line" | awk '{print $2}')
+                    if [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
+                        if [[ $mac == 08:00* ]]; then
+                            echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> VirtualBox <-${RESET}"
+                        elif [[ $mac == 00:0C* ]]; then
+                            echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> VMware <-${RESET}"
+                        elif [[ $mac == 52:54* ]]; then
+                            echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> Qemu <-${RESET}"
+                        else
+                            echo -e "${CYAN}Device -> IP: $ip${RESET}"
+                        fi
+                    fi
+                done
+            fi
         fi
+    fi
+    ;;
+    # OSDetect
+    -o|--osdetect)
+        target_ip=$2
+        if ! command -v nmap &> /dev/null; then
+        echo -e "${RED}Nmap is not installed. Installing...${RESET}"
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y nmap > /dev/null 2>&1 &
+        for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"; done
+        echo -e "${GREEN}\nNmap installation complete.${RESET}"
+        fi
+        os_detection=$(nmap -O "$target_ip" 2>/dev/null)
+        os_name=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}')
+        echo -e "+-------------------+----------------------------+"
+        echo -e "| OS Name           | Details                    |"
+        echo -e "+-------------------+----------------------------+"
+        printf "| %-17s | %-26s |\n" "${os_name:-Unknown}" "${os_name:-Unknown}"
+        echo -e "+-------------------+----------------------------+"
         ;;
-    *)
-        echo -e "${RED}Invalid option. Use -p, -n, -s, -o, -f, or -a.${RESET}"
+    
+# FullScan
+    -f|--fullscan)
+        target_ip=$2
+        if ! command -v nmap &> /dev/null; then
+        echo -e "${RED}Nmap is not installed. Installing...${RESET}"
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y nmap > /dev/null 2>&1 &
+        for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"; done
+        echo -e "${GREEN}\nNmap installation complete.${RESET}"
+        fi
+        echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
+        full_scan=$(nmap -p- --min-rate=5000 -sSCV -O "$target_ip" 2>/dev/null)
+        echo -e "+-------------------+----------------------------+----------------------------+"
+        echo -e "| Port              | Service                    | Version                    |"
+        echo -e "+-------------------+----------------------------+----------------------------+"
+        echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
+            port=$(echo "$line" | awk '{print $1}')
+            service=$(echo "$line" | awk '{print $3}')
+            version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+            printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
+        done
+        echo -e "+-------------------+----------------------------+----------------------------+"
         ;;
+
 esac
