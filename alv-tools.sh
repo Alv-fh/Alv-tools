@@ -287,82 +287,55 @@ case "$1" in
         fi
     ;;
 
-        # FullScan
+       # Full Scan
     -f|--fullscan)
         target_ip=$2
         echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
-        
         if ! command -v nmap &> /dev/null; then
             echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
             exit 1
         fi
-        
-        # Realizar el escaneo completo
         full_scan=$(nmap -p- --min-rate=5000 -sSCV -O $target_ip)
-        
-        # Mostrar encabezado de la tabla
         echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
         echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
         echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
-        
-        # Procesar los resultados del escaneo
         echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
             port=$(echo "$line" | awk '{print $1}')
             service=$(echo "$line" | awk '{print $3}')
             version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
-    
-            # Buscar información del sistema operativo
             os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
             if [[ -z "$os_info" ]]; then
                 os_info="X"
             fi
-    
-            # Buscar nombre de dominio (hostname)
             domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
             if [[ -z "$domain_name" ]]; then
                 domain_name="X"
             fi
-            
-            # Imprimir los resultados formateados
             printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
         done
-    
-        # Mostrar final de la tabla
+
         echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
-        
-        # Preguntar si el usuario quiere guardar los resultados
         read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
         if [[ "$save_choice" =~ ^[Yy]$ ]]; then
             read -p "Enter the filename (without extension): " filename
             {
-                # Encabezado del archivo
                 echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
                 echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
                 echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
-                
-                # Procesar los resultados nuevamente y guardarlos en el archivo
                 echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
                     port=$(echo "$line" | awk '{print $1}')
                     service=$(echo "$line" | awk '{print $3}')
                     version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
-    
-                    # Buscar información del sistema operativo
                     os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
                     if [[ -z "$os_info" ]]; then
                         os_info="X"
                     fi
-    
-                    # Buscar nombre de dominio (hostname)
                     domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
                     if [[ -z "$domain_name" ]]; then
                         domain_name="X"
                     fi
-                    
-                    # Escribir los resultados formateados en el archivo
                     printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
                 done
-    
-                # Finalizar el archivo con la misma línea que la tabla
                 echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
             } > "$filename.txt"
             
