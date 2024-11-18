@@ -290,11 +290,19 @@ case "$1" in
        # Full Scan
     -f|--fullscan)
         target_ip=$2
-        echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
         if ! command -v nmap &> /dev/null; then
-            echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
-            exit 1
+        echo -e "${RED}Nmap is not installed. Installing...${RESET}"
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y nmap > /dev/null 2>&1 &
+        
+        # Barra de progreso de instalación
+        for i in {1..100}; do
+            sleep 0.05
+            echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
+        done
+        echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
+        echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
         full_scan=$(nmap -p- --min-rate=5000 -sSCV -O $target_ip)
         echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
         echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
