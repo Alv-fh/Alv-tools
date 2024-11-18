@@ -231,23 +231,48 @@ case "$1" in
     ;;
     # OSDetect
     -o|--osdetect)
-        target_ip=$2
-        if ! command -v nmap &> /dev/null; then
-        echo -e "${RED}Nmap is not installed. Installing...${RESET}"
-        sudo apt-get update > /dev/null 2>&1
-        sudo apt-get install -y nmap > /dev/null 2>&1 &
-        for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"; done
-        echo -e "${GREEN}\nNmap installation complete.${RESET}"
-        fi
-        os_detection=$(nmap -O "$target_ip" 2>/dev/null)
-        os_name=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}')
-        echo -e "+-------------------+----------------------------+"
-        echo -e "| OS Name           | Details                    |"
-        echo -e "+-------------------+----------------------------+"
-        printf "| %-17s | %-26s |\n" "${os_name:-Unknown}" "${os_name:-Unknown}"
-        echo -e "+-------------------+----------------------------+"
-        ;;
+            target_ip=$2
+            if ! command -v nmap &> /dev/null; then
+            echo -e "${RED}Nmap is not installed. Installing...${RESET}"
+            sudo apt-get update > /dev/null 2>&1
+            sudo apt-get install -y nmap > /dev/null 2>&1 &
+            for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"; done
+            echo -e "${GREEN}\nNmap installation complete.${RESET}"
+            fi
+            echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
+            os_detection=$(nmap -O $target_ip)
+            echo -e "+-------------------+----------------------------+"
+            echo -e "| OS Name           | Version                    |"
+            echo -e "+-------------------+----------------------------+"
+            os_name=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ' ' -f1)
+            os_version=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ' ' -f2-)
+            if [[ -z "$os_name" ]]; then
+                os_name="X"
+            fi
+            if [[ -z "$os_version" ]]; then
+                os_version="X"
+            fi
+            printf "| %-17s | %-26s |\n" "$os_name" "$os_version"
     
+            echo -e "+-------------------+----------------------------+"
+            read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
+            if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+                read -p "Enter the filename (without extension): " filename
+                {
+                    echo -e "+-------------------+----------------------------+"
+                    echo -e "| OS Name           | Version                    |"
+                    echo -e "+-------------------+----------------------------+"
+                    printf "| %-17s | %-26s |\n" "$os_name" "$os_version"
+                    echo -e "+-------------------+----------------------------+"
+                } > "$filename.txt"
+                
+                echo -e "${GREEN}Results saved to $filename.txt${RESET}"
+            else
+                echo -e "${RED}Results not saved.${RESET}"
+            fi
+            ;;
+
+
 # FullScan
     -f|--fullscan)
         target_ip=$2
