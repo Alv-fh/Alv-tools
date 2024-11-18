@@ -349,7 +349,7 @@ case "$1" in
         else
             echo -e "${RED}Results not saved.${RESET}"
         fi
-    ;;
+        ;;
 
 
 
