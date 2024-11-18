@@ -135,9 +135,9 @@ case "$1" in
     
             for i in {1..100}; do
                 sleep 0.05
-                echo -ne "${BRIGHT_GREEN}Installing nmap... ${i}%\r${RESET}"
+                echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
             done
-            echo -e "\n${BRIGHT_GREEN}Nmap installation complete.${RESET}"
+            echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
     
         # Realizar la enumeración de servicios
@@ -232,6 +232,7 @@ case "$1" in
     # OSDetect
     -o|--osdetect)
         target_ip=$2
+        echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
         if ! command -v nmap &> /dev/null; then
             echo -e "${RED}Nmap is not installed. Installing...${RESET}"
             sudo apt-get update > /dev/null 2>&1
