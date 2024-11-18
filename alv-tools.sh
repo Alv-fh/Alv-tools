@@ -110,7 +110,6 @@ case "$1" in
             done
             echo -e "\n${BRIGHT_GREEN}Nmap installation complete.${RESET}"
         fi
-
         echo ""
         echo -e "${GREEN}Performing port scan on $target_ip...${RESET}"
         open_ports=$(nmap -p- -sS $target_ip 2>&1 | grep '^[0-9]' | cut -d "/" -f1 | sort -u | xargs | tr ' ' ',')
@@ -124,20 +123,6 @@ case "$1" in
     # PingSweep
     -n|--pingsweep)
         network=$2
-
-        if ! command -v ping &> /dev/null; then
-            echo -e "${RED}Ping command is not available. Installing iputils-ping...${RESET}"
-
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install -y iputils-ping > /dev/null 2>&1 &
-            
-            for i in {1..100}; do
-                sleep 0.05
-                echo -ne "${BRIGHT_GREEN}Installing iputils-ping... ${i}%\r${RESET}"
-            done
-            echo -e "\n${BRIGHT_GREEN}Ping installation complete.${RESET}"
-        fi
-
         echo -e "${GREEN}Performing ping sweep on $network.0/24...${RESET}"
         for ip in {1..254}; do
             ping -c 1 -W 1 $network.$ip &> /dev/null && echo -e "${GREEN}Host $network.$ip is up.${RESET}" &
@@ -146,46 +131,60 @@ case "$1" in
         ;;
     # ServiceEnum
     -s|--serviceenum)
-        target_ip=$2
+    target_ip=$2
+    echo -e "${GREEN}Enumerating services on $target_ip...${RESET}"
 
-        if ! command -v nmap &> /dev/null; then
-            echo -e "${RED}Nmap is not installed. Starting installation...${RESET}"
-            
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install -y nmap > /dev/null 2>&1 &
-            
-            for i in {1..100}; do
-                sleep 0.05
-                echo -ne "${BRIGHT_GREEN}Installing nmap... ${i}%\r${RESET}"
-            done
-            echo -e "\n${BRIGHT_GREEN}Nmap installation complete.${RESET}"
-        fi
+    if ! command -v nmap &> /dev/null; then
+        echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
+        exit 1
+    fi
 
-        echo -e "${GREEN}Enumerating services on $target_ip...${RESET}"
-        services=$(nmap -sV $target_ip)
+    services=$(nmap -sV $target_ip)
 
-        if [[ "$services" == *"open"* ]]; then
-            echo -e "+-------------------+----------------------------+----------------------------+"
-            echo -e "| Port              | Service                    | Version                    |"
-            echo -e "+-------------------+----------------------------+----------------------------+"
+    if [[ "$services" == *"open"* ]]; then
+        echo -e "+-------------------+----------------------------+----------------------------+"
+        echo -e "| Port              | Service                    | Version                    |"
+        echo -e "+-------------------+----------------------------+----------------------------+"
 
-            echo "$services" | grep -E "^[0-9]+/tcp.*open" | while read -r line; do
-                port=$(echo "$line" | awk '{print $1}' | cut -d '/' -f1)
-                service=$(echo "$line" | awk '{print $3}')
-                version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
-                printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
-            done
+        echo "$services" | grep -E "^[0-9]+/tcp.*open" | while read -r line; do
+            port=$(echo "$line" | awk '{print $1}' | cut -d '/' -f1)
+            service=$(echo "$line" | awk '{print $3}')
+            version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+            printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
+        done
 
-            echo -e "+-------------------+----------------------------+----------------------------+"
+        echo -e "+-------------------+----------------------------+----------------------------+"
 
+        echo ""
+        read -p "Do you want to save the table to a .txt file? (y/n): " save_choice
+        if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+            # Preguntar el nombre del archivo
+            read -p "Enter the filename (without extension): " filename
+            {
+                echo -e "+-------------------+----------------------------+----------------------------+"
+                echo -e "| Port              | Service                    | Version                    |"
+                echo -e "+-------------------+----------------------------+----------------------------+"
+                echo "$services" | grep -E "^[0-9]+/tcp.*open" | while read -r line; do
+                    port=$(echo "$line" | awk '{print $1}' | cut -d '/' -f1)
+                    service=$(echo "$line" | awk '{print $3}')
+                    version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+                    printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
+                done
+                echo -e "+-------------------+----------------------------+----------------------------+"
+            } > "$filename.txt"
+
+            echo -e "${GREEN}Table has been saved to $filename.txt${RESET}"
         else
-            echo -e "${RED}No open ports found on $target_ip.${RESET}"
+            echo -e "${RED}Table was not saved.${RESET}"
         fi
-        ;;
+
+    else
+        echo -e "${RED}No open ports found on $target_ip.${RESET}"
+    fi
+    ;;
     # Arp-Scan
     -a|--arp-scan)
         interface=$2
-    
         if [[ -z "$interface" ]]; then
             echo -e "${RED}No interface specified. Please provide a network interface.${RESET}"
         else
@@ -194,20 +193,17 @@ case "$1" in
             else
                 if ! command -v arp-scan &> /dev/null; then
                     echo -e "${RED}arp-scan is not installed. Starting installation...${RESET}"
-                    
-                    sudo apt-get update > /dev/null 2>&1
+                    sudo apt-get update > /dev/null 2>&1  
                     sudo apt-get install -y arp-scan > /dev/null 2>&1 &
                     
                     for i in {1..100}; do
                         sleep 0.05
-                        echo -ne "${BRIGHT_GREEN}Installing arp-scan... ${i}%\r${RESET}"
+                        echo -ne "${GREEN}Installing arp-scan... ${i}%\r${RESET}"
                     done
-                    echo -e "\n${BRIGHT_GREEN}arp-scan installation complete.${RESET}"
+                    echo -e "\n${GREEN}arp-scan installation complete.${RESET}"
                 fi
-                
                 echo -e "${GREEN}Performing ARP scan on interface $interface...${RESET}" 
                 scan_result=$(sudo arp-scan --interface="$interface" --localnet 2>&1)
-                
                 if echo "$scan_result" | grep -q "Could not obtain IP address"; then
                     echo -e "${RED}No devices found on this interface.${RESET}"
                 elif [[ -z "$scan_result" ]]; then
@@ -216,7 +212,6 @@ case "$1" in
                     echo "$scan_result" | while read -r line; do
                         ip=$(echo "$line" | awk '{print $1}')
                         mac=$(echo "$line" | awk '{print $2}')
-                        
                         if [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
                             if [[ $mac == 08:00* ]]; then
                                 echo -e "${BRIGHT_YELLOW}Possible target -> IP: ${BRIGHT_MAGENTA}$ip${RESET}${BRIGHT_YELLOW}  | -> VirtualBox <-${RESET}"
@@ -233,26 +228,101 @@ case "$1" in
             fi
         fi
         ;;
-
     # OSDetect
     -o|--osdetect)
         target_ip=$2
-
-        if ! command -v nmap &> /dev/null; then
-            echo -e "${RED}Nmap is not installed. Starting installation...${RESET}"
-            
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install -y nmap > /dev/null 2>&1 &
-
-            for i in {1..100}; do
-                sleep 0.05
-                echo -ne "${BRIGHT_GREEN}Installing nmap... ${i}%\r${RESET}"
-            done
-            echo -e "\n${BRIGHT_GREEN}Nmap installation complete.${RESET}"
-        fi
-
         echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
+        if ! command -v nmap &> /dev/null; then
+            echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
+            exit 1
+        fi
         os_detection=$(nmap -O $target_ip)
-        echo "$os_detection"
+        echo -e "+-------------------+----------------------------+"
+        echo -e "| OS Name           | Version                    |"
+        echo -e "+-------------------+----------------------------+"
+        os_name=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ' ' -f1)
+        os_version=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ' ' -f2-)
+        if [[ -z "$os_name" ]]; then
+            os_name="X"
+        fi
+        if [[ -z "$os_version" ]]; then
+            os_version="X"
+        fi
+        printf "| %-17s | %-26s |\n" "$os_name" "$os_version"
+
+        echo -e "+-------------------+----------------------------+"
+        read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
+        if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+            read -p "Enter the filename (without extension): " filename
+            {
+                echo -e "+-------------------+----------------------------+"
+                echo -e "| OS Name           | Version                    |"
+                echo -e "+-------------------+----------------------------+"
+                printf "| %-17s | %-26s |\n" "$os_name" "$os_version"
+                echo -e "+-------------------+----------------------------+"
+            } > "$filename.txt"
+            
+            echo -e "${GREEN}Results saved to $filename.txt${RESET}"
+        else
+            echo -e "${RED}Results not saved.${RESET}"
+        fi
         ;;
-esac
+    # Full Scan
+    -f|--fullscan)
+        target_ip=$2
+        echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
+        if ! command -v nmap &> /dev/null; then
+            echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
+            exit 1
+        fi
+        full_scan=$(nmap -p- --min-rate=5000 -sSCV -O $target_ip)
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
+            port=$(echo "$line" | awk '{print $1}')
+            service=$(echo "$line" | awk '{print $3}')
+            version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+            os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
+            if [[ -z "$os_info" ]]; then
+                os_info="X"
+            fi
+            domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
+            if [[ -z "$domain_name" ]]; then
+                domain_name="X"
+            fi
+            printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
+        done
+
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
+        if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+            read -p "Enter the filename (without extension): " filename
+            {
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+                echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+                echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
+                    port=$(echo "$line" | awk '{print $1}')
+                    service=$(echo "$line" | awk '{print $3}')
+                    version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+                    os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
+                    if [[ -z "$os_info" ]]; then
+                        os_info="X"
+                    fi
+                    domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
+                    if [[ -z "$domain_name" ]]; then
+                        domain_name="X"
+                    fi
+                    printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
+                done
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+            } > "$filename.txt"
+            
+            echo -e "${GREEN}Results saved to $filename.txt${RESET}"
+        else
+            echo -e "${RED}Results not saved.${RESET}"
+        fi
+        ;;
+
+    esac
