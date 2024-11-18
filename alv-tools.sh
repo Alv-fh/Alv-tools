@@ -245,8 +245,6 @@ case "$1" in
             done
             echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
-    
-        echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
         
         # Ejecución del escaneo de OS
         os_detection=$(nmap -O $target_ip)
