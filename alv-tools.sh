@@ -290,59 +290,72 @@ case "$1" in
     # FullScan
     -f|--fullscan)
         target_ip=$2
-        if ! command -v nmap &> /dev/null; then
-            echo -e "${RED}Nmap is not installed. Installing...${RESET}"
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install -y nmap > /dev/null 2>&1 &
-            
-            # Barra de progreso de instalación
-            for i in {1..100}; do
-                sleep 0.05
-                echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
-            done
-            echo -e "\n${GREEN}Nmap installation complete.${RESET}"
-        fi
-        
         echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
         
-        # Realización del escaneo completo
-        full_scan=$(nmap -p- --min-rate=5000 -sSCV -O "$target_ip" 2>/dev/null)
-    
-        # Mostrar encabezado
-        echo -e "+-------------------+----------------------------+----------------------------+"
-        echo -e "| Port              | Service                    | Version                    |"
-        echo -e "+-------------------+----------------------------+----------------------------+"
-    
-        # Procesar la salida del escaneo
-        result=""
+        if ! command -v nmap &> /dev/null; then
+            echo -e "${RED}nmap is not installed. Please install nmap first.${RESET}"
+            exit 1
+        fi
+        
+        # Realizar el escaneo completo
+        full_scan=$(nmap -p- --min-rate=5000 -sSCV -O $target_ip)
+        
+        # Mostrar encabezado de la tabla
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        
+        # Procesar los resultados del escaneo
         echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
             port=$(echo "$line" | awk '{print $1}')
             service=$(echo "$line" | awk '{print $3}')
             version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
-    
-            # Si la versión está vacía, poner "Unknown"
-            if [[ -z "$version" ]]; then
-                version="Unknown"
+            os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
+            if [[ -z "$os_info" ]]; then
+                os_info="X"
             fi
-    
-            # Almacenar el resultado formateado en la variable result
-            result+=$(printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version")
+            domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
+            if [[ -z "$domain_name" ]]; then
+                domain_name="X"
+            fi
+            
+            # Imprimir los resultados formateados
+            printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
         done
-        
-        # Mostrar la tabla
-        echo -e "$result"
-        echo -e "+-------------------+----------------------------+----------------------------+"
     
+        # Mostrar final de la tabla
+        echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+        
         # Preguntar si el usuario quiere guardar los resultados
         read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
         if [[ "$save_choice" =~ ^[Yy]$ ]]; then
             read -p "Enter the filename (without extension): " filename
             {
-                echo -e "+-------------------+----------------------------+----------------------------+"
-                echo -e "| Port              | Service                    | Version                    |"
-                echo -e "+-------------------+----------------------------+----------------------------+"
-                echo -e "$result"
-                echo -e "+-------------------+----------------------------+----------------------------+"
+                # Encabezado del archivo
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+                echo -e "| Port              | Service                    | Version                    | OS                         | Domain Name          |"
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
+                
+                # Procesar los resultados nuevamente y guardarlos en el archivo
+                echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
+                    port=$(echo "$line" | awk '{print $1}')
+                    service=$(echo "$line" | awk '{print $3}')
+                    version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+                    os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
+                    if [[ -z "$os_info" ]]; then
+                        os_info="X"
+                    fi
+                    domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
+                    if [[ -z "$domain_name" ]]; then
+                        domain_name="X"
+                    fi
+                    
+                    # Escribir los resultados formateados en el archivo
+                    printf "| %-17s | %-26s | %-26s | %-26s | %-20s |\n" "$port" "$service" "$version" "$os_info" "$domain_name"
+                done
+    
+                # Finalizar el archivo con la misma línea que la tabla
+                echo -e "+-------------------+----------------------------+----------------------------+----------------------------+----------------------+"
             } > "$filename.txt"
             
             echo -e "${GREEN}Results saved to $filename.txt${RESET}"
@@ -350,6 +363,7 @@ case "$1" in
             echo -e "${RED}Results not saved.${RESET}"
         fi
         ;;
+
 
         
 esac
