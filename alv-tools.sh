@@ -232,7 +232,6 @@ case "$1" in
     # OSDetect
     -o|--osdetect)
         target_ip=$2
-        echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
         if ! command -v nmap &> /dev/null; then
             echo -e "${RED}Nmap is not installed. Installing...${RESET}"
             sudo apt-get update > /dev/null 2>&1
@@ -245,7 +244,7 @@ case "$1" in
             done
             echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
-        
+        echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
         # Ejecución del escaneo de OS
         os_detection=$(nmap -O $target_ip)
         
