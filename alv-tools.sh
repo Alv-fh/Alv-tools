@@ -287,7 +287,7 @@ case "$1" in
         fi
     ;;
 
-    # FullScan
+        # FullScan
     -f|--fullscan)
         target_ip=$2
         echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
@@ -310,10 +310,14 @@ case "$1" in
             port=$(echo "$line" | awk '{print $1}')
             service=$(echo "$line" | awk '{print $3}')
             version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+    
+            # Buscar información del sistema operativo
             os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
             if [[ -z "$os_info" ]]; then
                 os_info="X"
             fi
+    
+            # Buscar nombre de dominio (hostname)
             domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
             if [[ -z "$domain_name" ]]; then
                 domain_name="X"
@@ -341,10 +345,14 @@ case "$1" in
                     port=$(echo "$line" | awk '{print $1}')
                     service=$(echo "$line" | awk '{print $3}')
                     version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+    
+                    # Buscar información del sistema operativo
                     os_info=$(echo "$full_scan" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | sed 's/^ *//g')
                     if [[ -z "$os_info" ]]; then
                         os_info="X"
                     fi
+    
+                    # Buscar nombre de dominio (hostname)
                     domain_name=$(echo "$full_scan" | grep -i "hostname" | awk -F "hostname" '{print $2}' | awk '{print $1}')
                     if [[ -z "$domain_name" ]]; then
                         domain_name="X"
@@ -363,6 +371,7 @@ case "$1" in
             echo -e "${RED}Results not saved.${RESET}"
         fi
         ;;
+
 
 
         
