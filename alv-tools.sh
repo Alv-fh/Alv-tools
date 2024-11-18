@@ -295,6 +295,7 @@ case "$1" in
             sudo apt-get update > /dev/null 2>&1
             sudo apt-get install -y nmap > /dev/null 2>&1 &
             
+            # Barra de progreso de instalación
             for i in {1..100}; do
                 sleep 0.05
                 echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
@@ -304,29 +305,52 @@ case "$1" in
         
         echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
         
-    
+        # Realización del escaneo completo
         full_scan=$(nmap -p- --min-rate=5000 -sSCV -O "$target_ip" 2>/dev/null)
     
-    
+        # Mostrar encabezado
         echo -e "+-------------------+----------------------------+----------------------------+"
         echo -e "| Port              | Service                    | Version                    |"
         echo -e "+-------------------+----------------------------+----------------------------+"
     
-    
+        # Procesar la salida del escaneo
+        result=""
         echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
             port=$(echo "$line" | awk '{print $1}')
             service=$(echo "$line" | awk '{print $3}')
             version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
     
+            # Si la versión está vacía, poner "Unknown"
             if [[ -z "$version" ]]; then
                 version="Unknown"
             fi
     
-            printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
+            # Almacenar el resultado formateado en la variable result
+            result+=$(printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version")
         done
         
+        # Mostrar la tabla
+        echo -e "$result"
         echo -e "+-------------------+----------------------------+----------------------------+"
+    
+        # Preguntar si el usuario quiere guardar los resultados
+        read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
+        if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+            read -p "Enter the filename (without extension): " filename
+            {
+                echo -e "+-------------------+----------------------------+----------------------------+"
+                echo -e "| Port              | Service                    | Version                    |"
+                echo -e "+-------------------+----------------------------+----------------------------+"
+                echo -e "$result"
+                echo -e "+-------------------+----------------------------+----------------------------+"
+            } > "$filename.txt"
+            
+            echo -e "${GREEN}Results saved to $filename.txt${RESET}"
+        else
+            echo -e "${RED}Results not saved.${RESET}"
+        fi
     ;;
+
 
 
 esac
