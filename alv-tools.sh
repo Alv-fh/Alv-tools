@@ -287,30 +287,46 @@ case "$1" in
         fi
     ;;
 
-
-
-# FullScan
+    # FullScan
     -f|--fullscan)
         target_ip=$2
         if ! command -v nmap &> /dev/null; then
-        echo -e "${RED}Nmap is not installed. Installing...${RESET}"
-        sudo apt-get update > /dev/null 2>&1
-        sudo apt-get install -y nmap > /dev/null 2>&1 &
-        for i in {1..100}; do sleep 0.05; echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"; done
-        echo -e "${GREEN}\nNmap installation complete.${RESET}"
+            echo -e "${RED}Nmap is not installed. Installing...${RESET}"
+            sudo apt-get update > /dev/null 2>&1
+            sudo apt-get install -y nmap > /dev/null 2>&1 &
+            
+            for i in {1..100}; do
+                sleep 0.05
+                echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
+            done
+            echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
+        
         echo -e "${GREEN}Performing full scan on $target_ip...${RESET}"
+        
+    
         full_scan=$(nmap -p- --min-rate=5000 -sSCV -O "$target_ip" 2>/dev/null)
+    
+    
         echo -e "+-------------------+----------------------------+----------------------------+"
         echo -e "| Port              | Service                    | Version                    |"
         echo -e "+-------------------+----------------------------+----------------------------+"
+    
+    
         echo "$full_scan" | grep -E "^[0-9]+/(tcp|udp)" | while read -r line; do
             port=$(echo "$line" | awk '{print $1}')
             service=$(echo "$line" | awk '{print $3}')
             version=$(echo "$line" | awk '{print $4, $5, $6}' | sed 's/^ *//g')
+    
+            if [[ -z "$version" ]]; then
+                version="Unknown"
+            fi
+    
             printf "| %-17s | %-26s | %-26s |\n" "$port" "$service" "$version"
         done
+        
         echo -e "+-------------------+----------------------------+----------------------------+"
-        ;;
+    ;;
+
 
 esac
