@@ -126,7 +126,6 @@ case "$1" in
         target_ip=$2
         echo -e "${GREEN}Enumerating services on $target_ip...${RESET}"
     
-        # Comprobar e instalar Nmap si no está disponible
         if ! command -v nmap &> /dev/null; then
             echo -e "${RED}Nmap is not installed. Starting installation...${RESET}"
     
@@ -139,8 +138,6 @@ case "$1" in
             done
             echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
-    
-        # Realizar la enumeración de servicios
         services=$(nmap -sV $target_ip)
     
         if [[ "$services" == *"open"* ]]; then
@@ -183,6 +180,7 @@ case "$1" in
             echo -e "${RED}No open ports found on $target_ip.${RESET}"
         fi
         ;;
+        
     # Arp-Scan
    -a|--arp-scan)
     interface=$2
@@ -236,8 +234,6 @@ case "$1" in
             echo -e "${RED}Nmap is not installed. Installing...${RESET}"
             sudo apt-get update > /dev/null 2>&1
             sudo apt-get install -y nmap > /dev/null 2>&1 &
-    
-            # Barra de progreso de instalación
             for i in {1..100}; do
                 sleep 0.05
                 echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
@@ -245,29 +241,21 @@ case "$1" in
             echo -e "\n${GREEN}Nmap installation complete.${RESET}"
         fi
         echo -e "${GREEN}Detecting OS on $target_ip...${RESET}"
-        # Ejecución del escaneo de OS
         os_detection=$(nmap -O $target_ip)
-        
-        # Extracción del nombre y versión del OS
         os_name=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ',' -f1)
         os_version=$(echo "$os_detection" | grep -i "OS details" | awk -F "OS details: " '{print $2}' | cut -d ',' -f2-)
-    
-        # Si no se encuentra OS, se pone como "Desconocido"
         if [[ -z "$os_name" ]]; then
             os_name="Unknown"
         fi
         if [[ -z "$os_version" ]]; then
             os_version="Unknown"
         fi
-    
-        # Mostrar los resultados
         echo -e "+-------------------+----------------------------+"
         echo -e "| OS Name           | Version                    |"
         echo -e "+-------------------+----------------------------+"
         printf "| %-17s | %-26s |\n" "$os_name" "$os_version"
         echo -e "+-------------------+----------------------------+"
-    
-        # Opción para guardar el archivo
+
         read -p "Do you want to save the results to a .txt file? (y/n): " save_choice
         if [[ "$save_choice" =~ ^[Yy]$ ]]; then
             read -p "Enter the filename (without extension): " filename
@@ -284,7 +272,6 @@ case "$1" in
             echo -e "${RED}Results not saved.${RESET}"
         fi
     ;;
-
        # Full Scan
     -f|--fullscan)
         target_ip=$2
@@ -293,7 +280,6 @@ case "$1" in
         sudo apt-get update > /dev/null 2>&1
         sudo apt-get install -y nmap > /dev/null 2>&1 &
         
-        # Barra de progreso de instalación
         for i in {1..100}; do
             sleep 0.05
             echo -ne "${GREEN}Installing nmap... ${i}%\r${RESET}"
@@ -349,9 +335,5 @@ case "$1" in
         else
             echo -e "${RED}Results not saved.${RESET}"
         fi
-        ;;
-
-
-
-        
+        ;;   
 esac
